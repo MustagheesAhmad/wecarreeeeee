@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const BASE_URL = 'http://192.168.0.103:5000';
@@ -17,6 +18,16 @@ export const signupUser = async (formData: FormData) => {
 };
 
 export const completeDoctorSignup = async (payload: any) => {
-  const res = await axios.post(`${BASE_URL}/api/auth/complete-doctor-signup`, payload);
-  return res.data;
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) throw new Error("User ID not found in AsyncStorage");
+
+    const updatedPayload = { userId, ...payload };
+
+    const res = await axios.post(`${BASE_URL}/api/auth/complete-doctor-signup`, updatedPayload);
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ Doctor signup failed:", error?.response?.data || error.message);
+    throw error;
+  }
 };

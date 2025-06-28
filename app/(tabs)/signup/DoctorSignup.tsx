@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -44,8 +44,7 @@ export default function DoctorSignupScreen() {
     if (!validateFields()) return;
 
     router.push("get-doctor-diet");
-  
-      
+ 
   };
 
   const goToLogin = () => router.push("/login/Login");
