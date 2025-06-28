@@ -1,4 +1,4 @@
-import { useRemedies } from '@/context/RemedyContext';
+import API from '@/utils/api'; // Update this import path if needed
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -20,12 +20,39 @@ type Remedy = {
     remedyText: string;
 };
 
-export default function RemediesHome() {
-    const { remedies } = useRemedies();
+const RemediesHome = () => {
+    const [remedies, setRemedies] = useState<Remedy[]>([]);
     const [expandedIds, setExpandedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRemedies, setFilteredRemedies] = useState<Remedy[]>([]);
     const router = useRouter();
+
+    const baseImageURL = 'http://localhost:5001'; // Change if needed to match server address on device
+
+    useEffect(() => {
+        const fetchRemedies = async () => {
+            try {
+                const response = await API.get('/remedies/all');
+                const mappedRemedies: Remedy[] = response.data.map((item: any) => ({
+                    id: item._id,
+                    profileImage: item.parentId?.profilePhoto
+                        ? `${baseImageURL}${item.parentId.profilePhoto}`
+                        : null,
+                    userName: item.parentId?.fullName || 'Unknown',
+                    remedyImage: item.images?.[0]
+                        ? `${baseImageURL}${item.images[0]}`
+                        : '',
+                    remedyText: item.caption || '',
+                }));
+                setRemedies(mappedRemedies);
+                setFilteredRemedies(mappedRemedies);
+            } catch (error) {
+                console.error('Error fetching remedies:', error);
+            }
+        };
+
+        fetchRemedies();
+    }, []);
 
     useEffect(() => {
         if (searchQuery.trim() === '') {
@@ -66,11 +93,13 @@ export default function RemediesHome() {
                     <Text style={styles.cardUserName}>{item.userName}</Text>
                 </View>
 
-                <Image
-                    source={{ uri: item.remedyImage }}
-                    style={styles.cardRemedyImage}
-                    resizeMode="cover"
-                />
+                {item.remedyImage ? (
+                    <Image
+                        source={{ uri: item.remedyImage }}
+                        style={styles.cardRemedyImage}
+                        resizeMode="cover"
+                    />
+                ) : null}
 
                 {isExpanded ? (
                     <Text style={styles.cardText}>{item.remedyText}</Text>
@@ -79,7 +108,6 @@ export default function RemediesHome() {
                         {item.remedyText}
                     </Text>
                 )}
-
 
                 {isLongText && (
                     <TouchableOpacity onPress={() => toggleExpanded(item.id)}>
@@ -101,6 +129,7 @@ export default function RemediesHome() {
                 <Text style={styles.headerTitle}>Remedies</Text>
                 <View style={{ width: 24 }} />
             </View>
+
             <View style={styles.searchContainer}>
                 <AntDesign name="search1" size={18} color="#8B347B" style={{ marginHorizontal: 8 }} />
                 <TextInput
@@ -111,13 +140,11 @@ export default function RemediesHome() {
                     placeholderTextColor="#D6CBCB"
                     style={styles.searchInput}
                 />
-
                 <TouchableOpacity style={styles.searchButton}>
                     <Text style={styles.searchButtonText}>Search</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Remedies List */}
             <FlatList
                 data={filteredRemedies}
                 keyExtractor={(item) => item.id}
@@ -125,15 +152,16 @@ export default function RemediesHome() {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             />
-
         </View>
     );
-}
+};
+
+export default RemediesHome;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffcce5',
-
     },
     header: {
         flexDirection: 'row',
@@ -162,13 +190,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         alignItems: 'center',
         marginBottom: 10,
-        marginHorizontal:10,
+        marginHorizontal: 10,
     },
     searchInput: {
         flex: 1,
         fontSize: 14,
         color: '#333',
-
     },
     searchButton: {
         backgroundColor: '#8B347B',
@@ -224,5 +251,4 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         paddingHorizontal: 8,
     },
-   
 });
