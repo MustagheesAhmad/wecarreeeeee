@@ -2,7 +2,7 @@ import { signupUser } from '@/api/auth';
 import * as Font from 'expo-font';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -20,7 +20,7 @@ import {
 
 export default function Signup() {
   const router = useRouter();
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<any>(null); // Not string anymore
   const [role, setRole] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,25 +57,18 @@ const handleParentSignup = async () => {
   try {
     const formData = new FormData();
 
-    formData.append('fullName', name);
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('password', 'defaultPassword123');
-    formData.append('role', 'parent');
+formData.append('fullName', name);
+formData.append('email', email);
+formData.append('password', password);
+formData.append('role', 'parent');
 
-    // Convert base64 image to blob
-    const blob = await (await fetch(image!)).blob();
-    formData.append('profilePhoto', {
-      uri: image!,
-      name: 'profile.jpg',
-      type: blob.type || 'image/jpeg',
-    } as any);
-
-    // Log formData entries here
-    console.log('FormData content:');
-    formData.forEach((value, key) => {
-      console.log(key, value);
-    });
+// if (image) {
+//   formData.append('profilePhoto', {
+//     uri: image.uri,
+//     name: image.fileName || 'profile.jpg',
+//     type: image.type || 'image/jpeg',
+//   } as any);
+// }
 
     // Call API
     await signupUser(formData);
@@ -97,29 +90,25 @@ const handleParentSignup = async () => {
 
 
 
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      alert('Permission to access camera roll is required!');
-      return;
-    }
+const pickImage = async () => {
+  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permissionResult.granted) {
+    alert('Permission to access camera roll is required!');
+    return;
+  }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5, // reduced quality for smaller base64 size
-      base64: true,
-    });
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.5,
+  });
 
-    if (!result.canceled) {
-      const pickedImage = result.assets[0];
-      // Sometimes type can be undefined, fallback to jpeg
-      const mimeType = pickedImage.type || 'image/jpeg';
-      const base64Image = `data:${mimeType};base64,${pickedImage.base64}`;
-      setImage(base64Image);
-    }
-  };
+  if (!result.canceled) {
+    setImage(result.assets[0]); // ✅ Store full object
+  }
+};
+
 
   const openModal = () => {
     setModalVisible(true);

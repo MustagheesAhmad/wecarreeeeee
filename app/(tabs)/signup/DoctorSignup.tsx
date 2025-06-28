@@ -1,6 +1,6 @@
 import { completeDoctorSignup } from "@/api/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -47,10 +47,6 @@ export default function DoctorSignupScreen() {
     setLoading(true);
     try {
       const payload = {
-        name,
-        email,
-        role: "Doctor",
-        image,
         qualification,
         specialization,
         licenseNumber: license,
