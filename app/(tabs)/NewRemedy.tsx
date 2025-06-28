@@ -1,28 +1,29 @@
-import { useRemedies } from '@/context/RemedyContext';
+import API from '@/utils/api'; // adjust the path if needed
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
-
 import {
     Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import uuid from 'react-native-uuid';
 
 export default function AddRemedyScreen() {
     const router = useRouter();
     const [remedyText, setRemedyText] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    const { addRemedy } = useRemedies();
     const [errors, setErrors] = useState<{ remedy?: string }>({});
+
     const pickProfileImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -57,6 +58,47 @@ export default function AddRemedyScreen() {
 
         if (!result.canceled && result.assets.length > 0) {
             setImageUri(result.assets[0].uri);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!remedyText && !imageUri) {
+            setErrors({ remedy: 'Please enter remedy text or upload an image.' });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('caption', remedyText);
+
+        if (imageUri) {
+            const filename = imageUri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename ?? '');
+            const type = match ? `image/${match[1]}` : `image`;
+
+            formData.append('images', {
+                uri: imageUri,
+                name: filename,
+                type,
+            } as any);
+        }
+
+        try {
+            const response = await API.post('/remedies/add', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            console.log('Response:', response.data);
+
+            // Reset form
+            setRemedyText('');
+            setImageUri(null);
+            setProfileImage(null);
+            setErrors({});
+            router.push('/RemedyHome');
+        } catch (error: any) {
+            console.error('Upload error:', error.response?.data || error.message);
         }
     };
 
@@ -105,8 +147,6 @@ export default function AddRemedyScreen() {
                             placeholderTextColor="#999"
                         />
 
-
-                        {/* Remedy Image Upload */}
                         {/* Remedy Image Upload */}
                         <Text style={styles.addImageLabel}>Add an image/images</Text>
                         <View style={styles.imageRowWrapper}>
@@ -136,39 +176,13 @@ export default function AddRemedyScreen() {
                             <Text style={styles.errorText}>{errors.remedy}</Text>
                         ) : null}
 
-
-                        <TouchableOpacity
-                            style={styles.addButton}
-                            onPress={() => {
-                                if (!remedyText && !imageUri) {
-                                    setErrors({ remedy: 'Please enter remedy text or upload an image.' });
-                                    return;
-                                }
-
-                                const newRemedy = {
-                                    id: uuid.v4() as string,
-                                    profileImage: profileImage || null,
-                                    userName: 'Zarmeena Gull',
-                                    remedyImage: imageUri || '',
-                                    remedyText: remedyText,
-                                };
-
-                                addRemedy(newRemedy);
-                                setRemedyText('');
-                                setImageUri(null);
-                                setProfileImage(null);
-                                setErrors({});
-                                router.push('/RemedyHome');
-                            }}
-
-                        >
+                        <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
                             <Text style={styles.addButtonText}>Add Remedy</Text>
                         </TouchableOpacity>
-
                     </ScrollView>
                 </SafeAreaView>
             </KeyboardAvoidingView>
-        </TouchableWithoutFeedback >
+        </TouchableWithoutFeedback>
     );
 }
 
@@ -246,8 +260,6 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 20,
         padding: 5,
-
-
     },
     errorText: {
         color: 'red',
@@ -255,7 +267,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginBottom: 10,
     },
-    
     imageRowWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -270,7 +281,6 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 8,
-
     },
     addButton: {
         backgroundColor: '#8B347B',
@@ -284,10 +294,5 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-
     },
 });
-
-
-
-
