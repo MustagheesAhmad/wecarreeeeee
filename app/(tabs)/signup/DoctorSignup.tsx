@@ -1,4 +1,3 @@
-import { completeDoctorSignup } from "@/api/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -44,25 +43,8 @@ export default function DoctorSignupScreen() {
   const handleDoctorSignup = async () => {
     if (!validateFields()) return;
 
-    setLoading(true);
-    try {
-      const payload = {
-        qualification,
-        specialization,
-        licenseNumber: license,
-        hospital,
-        phone,
-      };
-
-      await completeDoctorSignup(payload);
-      alert("Doctor signed up successfully!");
-      router.replace("/login/Login");
-    } catch (err: any) {
-      console.error("Signup failed:", err);
-      alert(err?.response?.data?.message || "Signup failed");
-    } finally {
-      setLoading(false);
-    }
+    router.push("get-doctor-diet");
+ 
   };
 
   const goToLogin = () => router.push("/login/Login");

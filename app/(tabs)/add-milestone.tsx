@@ -1,5 +1,7 @@
 import { useMilestones } from '@/context/MilestoneContext';
+import API from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -13,7 +15,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import uuid from 'react-native-uuid';
 
 export default function AddMilestoneScreen() {
     const router = useRouter();
@@ -44,19 +45,19 @@ export default function AddMilestoneScreen() {
 
     const handleSave = async () => {
         if (!validate()) return;
-    
+         const babyId = await AsyncStorage.getItem("babyId");
         const milestone = {
-            id: uuid.v4() as string,
-            name,
+            babyId,
+            milestoneName: name,
             description,
-            isOngoing,
-            achievedDate: achievedDate ? achievedDate.toISOString() : null,
+            // isOngoing,
+            achievementDate: achievedDate ? achievedDate.toISOString() : null,
         };
     
         console.log('📤 Submitting milestone:', milestone);
     
         try {
-            const response = await axios.post('YOUR_API_URL_HERE', milestone); // Replace with actual URL
+            const response = await API.post('milestone/add', milestone); // Replace with actual URL
             console.log('✅ Milestone saved successfully:', response.data);
     
             addMilestone(milestone);

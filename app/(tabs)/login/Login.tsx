@@ -33,13 +33,17 @@ export default function LoginScreen() {
       password,
     });
 
-    const token = response.data.token; // get JWT from backend
-    const userId=response.data?.user?._id;
-    await AsyncStorage.setItem('userId',userId)
+      
+      const token = response.data.token; // get JWT from backend
     // Store token in AsyncStorage
-    await AsyncStorage.setItem('token', token);
     if(token){
+      const userId=response.data?.user?._id || response?.data?._id;
       await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('userId',userId)
+      if(response?.data?.user?.parentDetails?.babies[0]?._id){
+        await AsyncStorage.setItem('babyId',response?.data?.user?.parentDetails?.babies[0]?._id)
+
+      }
       router.push('/login/SuccessfulScreen');
 
     }
